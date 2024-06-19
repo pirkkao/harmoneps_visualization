@@ -1,0 +1,27 @@
+This is a python program meant to visualize FA-files
+from HarmonEPS runs.
+
+The program builds on top of "epygram"-tool and uses
+it to generate subplots of:
+ 1) forecast fields at given level+forecast range
+ 2) differences between fields
+ 3) ensemble mean fields
+ 4) ensemble std fields
+
+The basic idea is to be able to unify colorbars between
+different ensemble members/ensemble statistics between
+different research experiments.
+
+Usage:
+ 1) Get the FA files from ECF -
+    configure and run "./get_files.bash"
+
+ 2) Setup the epygram module path
+    "source setup.bash"
+
+ 3) Either create a configuration files in configs/
+    or configure your plot options in main_plot.py
+    "python3 main_plot.py"
+
+Several example uses are provided in configs-folder.
+The output these produce are illustrated in fig/example*.
