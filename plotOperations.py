@@ -49,19 +49,31 @@ def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtr
             if plottype == "multiMember":
                 if monoColor:
                     # Special treatment for radar case
-                    plot_in_fig2(fig,ax[i,j],data[i,j],dataBounds=manualBounds,subZone=subZone,\
+                    plot_in_fig2(fig,ax[i,j],data[i,j],dataBounds=[manualBounds[j]],subZone=subZone,\
                                  inum=j)
+                    #plot_in_fig2(fig,ax[i],data[i,j],dataBounds=manualBounds,subZone=subZone,\
+                    #             inum=j)
                     
-                elif scalesMatched:
-                    plot_in_fig(fig,ax[i,j],data[i,j],scalesMatched=True,dataBounds=[dExtra[j]])
-                        
                 else:
-                    plot_in_fig(fig,ax[i,j],data[i,j])
+                    if not scalesMatched:
+                        dataBounds=[]
+                    else:
+                        dataBounds=[dExtra[j]]
+                        if manualBounds:
+                            dataBounds=[manualBounds[0][j]]
+                                        
+                    #plot_in_fig(fig,ax[i,j],data[i,j],scalesMatched=True,dataBounds=[0,dExtra[j]])
+                    #plot_in_fig(fig,ax[i],data[i,j],scalesMatched=True,dataBounds=manualBounds)
+                    plot_in_fig(fig,ax[i,j],data[i,j],scalesMatched=scalesMatched,masked=masked,\
+                                dataBounds=dataBounds,subZone=subZone)
+                        
+                #else:
+                #    plot_in_fig(fig,ax[i,j],data[i,j])
                     
             elif plottype == "multiMemberDiff":
                 if i==0:
                     if manualBounds:
-                        plot_in_fig(fig,ax[i,j],data[i,j],dataBounds=[manualBounds[0]],subZone=subZone)
+                        plot_in_fig(fig,ax[i,j],data[i,j],dataBounds=[manualBounds[0][j]],subZone=subZone)
                     else:
                         plot_in_fig(fig,ax[i,j],data[i,j],subZone=subZone)
 
@@ -71,7 +83,7 @@ def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtr
                     else:
                         dataBounds=[dExtra[0][j],dExtra[1][j]]
                         if manualBounds:
-                            dataBounds=[manualBounds[1],-1*manualBounds[1]]
+                            dataBounds=[manualBounds[1][j],-1*manualBounds[1][j]]
 
                     plot_in_fig(fig,ax[i,j],data[i,j],colmap='RdBu_r',center=True,\
                                 scalesMatched=scalesMatched,masked=masked,dataBounds=dataBounds,\
@@ -158,7 +170,12 @@ def plot_in_fig(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,mas
 
     else:
         if len(dataBounds)==1:
-            minmax=(0.,dataBounds[0])
+            # Try if the element contains two values. Used for fields that are
+            # displaced w.r.t. to zero (e.g. temp in [K])
+            try:
+                minmax=(dataBounds[0][0],dataBounds[0][1])
+            except:
+                minmax=(0.,dataBounds[0])
         else:
             minmax=(dataBounds[1],dataBounds[0])
 
@@ -218,6 +235,8 @@ def plot_in_fig(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,mas
         ax.set_extent([17, 30, 57, 66])
     elif subZone==6:
         ax.set_extent([1, 14, 56, 66])
+    elif subZone==7:
+        ax.set_extent([16, 18, 59, 63])
     #print(data.fid['FA'])
 
 ########################################################
@@ -278,5 +297,7 @@ def plot_in_fig2(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,ma
         ax.set_extent([17, 30, 57, 66])
     elif subZone==6:
         ax.set_extent([1, 14, 56, 66])
+    elif subZone==7:
+        ax.set_extent([16, 18, 59, 63])
     #print(data.fid['FA'])
     

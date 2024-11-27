@@ -2,6 +2,7 @@
 import epygram
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
 
 from os import system, path
 
@@ -26,8 +27,15 @@ dpath="/ec/res4/scratch/fi3/investigation/icenu"
 # Stored config files for specific verification cases. If blanc, define setup below.
 #
 #ccase='precipphase-diff.2023021712+30.finland'
-#ccase='precipphase-diff.2022071512+24.baltic'
-ccase='example6'
+#ccase='precipphase-diff.20230217.finland'
+#ccase='precipphase-diff.20230218.finland'
+#ccase='precipphase-diff.20230219.finland'
+#ccase='precipphase-diff.20230220.finland'
+#ccase='precipphase-diff.20220715.baltic'
+ccase='memb-diff.20220715'
+#ccase='precipphase-diff.kgn-acon'
+#ccase='precip.20210817+XX.gavle'
+#ccase='example6'
 #ccase=''
 if ccase:
     ccase="configs/case."+ccase+".py"
@@ -41,6 +49,25 @@ if ccase:
     system("cp "+ccase+" mycase.py")
 
     from mycase import *
+
+    # Overwrite exp if asked from master
+    #
+    try:
+        exp=[sys.argv[1]]
+        print("Overwriting exp from master. Working on experiment",exp, "\n")
+    except:
+        print("Working on experiment", exp, "\n")
+
+    # Overwrite date if asked from master
+    #
+    try:
+        date=sys.argv[2]
+        print("Overwriting date from master. Working on date",date, "\n")
+    except:
+        print("Working on experiment", date, "\n")
+        
+    #system("sleep 2")
+    #quit()
 
 else:
     #########################################################
@@ -149,18 +176,18 @@ plt.rc('ytick',labelsize=6) #+(nrows*ncols)/4)
 # Functions
 #
 def main(level,dpath,exp,date,t,members,pars,plottype,scalesMatched,fixNegData,nrows,ncols,\
-         figsize,masked,hardMaskId,plotDomains,manualBounds):
+         figsize,masked,hardMaskId,plotDomains,manualBounds,figName,expName):
 
     # Load data
     #
-    print("Processing level ",str(level))
+    print("Processing fc+",t,"on level",str(level),"       ", "    ", exp)
     data,dextra=dope.main_data(dpath,exp,date,t,members,level,pars,plottype,scalesMatched,\
                                fixNegData,hardMaskId)
-    print("Processing level ",str(level),"DONE")
+    print("Processing fc+",t,"on level",str(level),"       ", "DONE", exp)
 
     # Cycle through domains (0=full domain)
     for izone in plotDomains:
-        print("Plotting   level ",str(level),"geozone num",izone)
+        print("Plotting   fc+",t, "on level" ,str(level),"izone",izone,"    ",exp)
     
         # Initialize a figure handle
         fig,ax=plop.init_fig2(data[0,0],nrows,ncols,figsize)
@@ -168,30 +195,46 @@ def main(level,dpath,exp,date,t,members,pars,plottype,scalesMatched,fixNegData,n
         # Call main plotting routine
         plop.plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,\
                                 dExtra=dextra,subZone=izone,manualBounds=manualBounds)
+
+        #
+        if not figName:
+            figName=expName+"_"+date+"_+"+t+"h"+"_lev"+str(level)+"_"+exp[0]+addName+"_subzone"+str(izone)+".png"
         
         # Full domain save
         if izone==0:
-            fig.savefig("fig/"+figName+"_+"+t+"h"+"_lev"+str(level)+addName+"_subzone"+str(izone)+".png",\
+            fig.savefig("fig/"+figName,\
                         pad_inches=0.5,bbox_inches='tight')
             
         # Sub-domain save, padding messed up due to "cropping"
         else:
-            fig.savefig("fig/"+figName+"_+"+t+"h"+"_lev"+str(level)+addName+"_subzone"+str(izone)+".png")
+            fig.savefig("fig/"+figName)
 
         plt.close(fig)
-        print("Plotting   level ",str(level),"geozone num",izone,"DONE")
+        print("Plotting   fc+",t, "on level",str(level),"izone",izone,"DONE",exp)
 
 ##############################################################################
 
 # One pdf page is 60Mb, dont understand what's causing this
 #with PdfPages(figName+".pdf") as pdf:
 
-# Generate one plot for each level specified
+# Generate one plot for each level and forecast length specified
 if not parallel:
+
+    # If manualBounds are asked from table, use this
+    # logical to do it again for different fc lengths
+    # (the same manualBounds otherwise used for all fc len)
+    #
+    reset=False
+    
     for time in t:
         for level in levels:
+            # If requsted, get boundary values from table
+            if manualBounds=="getFromTable" or reset:
+                manualBounds=dope.setPredefinedBounds(date,time,pars)
+                reset=True
+
             main(level,dpath,exp,date,time,members,pars,plottype,scalesMatched,fixNegData,\
-                 nrows,ncols,figsize,masked,hardMaskId,plotDomains,manualBounds)
+                 nrows,ncols,figsize,masked,hardMaskId,plotDomains,manualBounds,figName,expName)
 
 else:
     # Currently only levels parallelized
@@ -203,7 +246,8 @@ else:
                                members=members,pars=pars,plottype=plottype,\
                                scalesMatched=scalesMatched,fixNegData=fixNegData,\
                                nrows=nrows,ncols=ncols,figsize=figsize,masked=masked,\
-                               hardMaskId=hardMaskId,plotDomains=plotDomains,manualBounds=manualBounds),\
+                               hardMaskId=hardMaskId,plotDomains=plotDomains,manualBounds=manualBounds,\
+                               figName=figName,expName=expName),\
                        levels)
         pool.close()
         pool.join()

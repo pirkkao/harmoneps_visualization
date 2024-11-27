@@ -22,16 +22,21 @@ def file_name(path,exp,date,time,memb):
 def load_data(fname,level,par):
     # Load data with epygram and read the desired field in
     #
-    parname="S0"+str(level)+par
+    if level > 0:
+        parname="S0"+str(level)+par
 
-    # Overwrite for SPP pattern (stored differently),
-    # and for surface fields
-    if par=="SPP_PATTERN1":
-        parname="S001SPP_PATTERN"
-    elif par=="SPP_PATTERN2":
-        parname="S002SPP_PATTERN"
-    elif par=='SURFINSPLUIE' or par=='SURFINSNEIGE' or par=='SURFINSGRAUPEL':
+    else:
         parname=par
+        # Overwrite for SPP pattern (stored differently),
+        # and for surface fields
+        if par=="SPP_PATTERN1":
+            parname="S001SPP_PATTERN"
+        elif par=="SPP_PATTERN2":
+            parname="S002SPP_PATTERN"
+        elif par=='SURFINSPLUIE' or par=='SURFINSNEIGE' or par=='SURFINSGRAUPEL':
+            parname=par
+        elif par=='SURFNEBUL.TOTALE':
+            parname=par
     
     r=epygram.formats.resource(fname,'r')
 
@@ -81,6 +86,12 @@ def loadAllData(path,exp,date,t,members,level,pars,fixNegData,hardMaskId):
                         # Norwegian South + North Sea
                         d.data[0:961,500:751]=0.
                         d.data[700:961,:]=0.
+                    elif hardMaskId=="Gavle":
+                        d.data[0:961,740:751]=0.
+                        d.data[0:961,0:400]=0.
+                        d.data[0:290,:]=0.
+                        d.data[610:961,:]=0.
+                        
                 
                 # Load data in per variable and level
                 #data[iexp,imemb,ipar,ilev]=d
@@ -393,6 +404,61 @@ def dhDiff2(data,masked):
 
 
     return data
+
+
+def setPredefinedBounds(date,t,pars):
+    # Predefined list for output field bounds
+    #
+    # [value for raw field upper limit, value for field diff]
+    #
+    # In case two values are defined for the raw field,
+    # the 1st element is used as the lower limit for colorscale
+    #
+
+    tempBounds=[]
+    
+    for par in pars:
+        table=[]
+
+        if par=='SURFACCPLUIE':
+            base=[10.,1] # kg/m3
+
+            table=dict([('2022071512'+'06',[20,4]),
+                        ('2022071512'+'12',[30,6]),
+                        ('2022071512'+'24',[40,8])])
+            
+        elif par=='SURFNEBUL.TOTALE':
+
+            base=[1.,1.] # 0-1
+            
+        elif par=='CLSTEMPERATURE':
+    
+            base=[[263.,283.],1] # K
+
+            table=dict([('2022071512'+'06',[[278,303],2]),
+                        ('2022071512'+'12',[[278,303],4]),
+                        ('2022071512'+'24',[[278,303],8])])
+
+        # Overwrite base if table value is found for date+t
+        if table:
+            try:
+                base=table[date+t]
+            except:
+                None
+
+        tempBounds.append(base)
+
+    # Rearrange the list into a format that plot
+    # understands (could be revisited)
+    control=[]
+    diff=[]
+    for item in tempBounds:
+        control.append(item[0])
+        diff.append(item[1])
+
+    manualBounds=[control,diff]
+    
+    return manualBounds
 
 
 ########################################3
