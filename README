@@ -13,14 +13,20 @@ different ensemble members/ensemble statistics between
 different research experiments.
 
 Usage:
- 1) Get the FA files from ECF -
-    configure and run "./get_files.bash"
+ 1) Get the FA files from ECFS -
+    (configure and run "./get_files.bash")
+    NEW*
+    configure and run "./get_files_mod-james.sh" or "./get_files_mod-james-deode.sh"
 
  2) Setup the epygram module path
     "source setup.bash"
 
- 3) Either create a configuration files in configs/
-    or configure your plot options in main_plot.py
+ 3) (Either create a configuration files in configs/
+    or configure your plot options in main_plot.py)
+    NEW*
+    Configurations should be changed in config/*toml-files.
+    Use one of the provided *NorwaySouth* toml-files for
+    guidance.
     "python3 main_plot.py"
 
 Several example uses are provided in configs-folder.
