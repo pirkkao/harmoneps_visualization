@@ -1,0 +1,142 @@
+#########################################################
+[run.Main]
+parallel=true
+parallelProcesses=5
+
+#########################################################
+[opts.Main]
+dpath="/ec/res4/scratch/fi3/investigation/deode_spp"
+exp= ["CY49t2_NorwaySouth_SPP7"]
+
+#members = [0,1,2,3,4,5,6]
+members = [0,1,2]
+
+#########################################################
+# Case 0:
+#
+[opts.Case.0]
+date = '2025052500'
+t='00'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.1]
+date = '2025052500'
+t='01'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.2]
+date = '2025052500'
+t='02'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.3]
+date = '2025052500'
+t='03'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.4]
+date = '2025052500'
+t='04'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.5]
+date = '2025052500'
+t='05'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.6]
+date = '2025052500'
+t='06'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.7]
+date = '2025052500'
+t='07'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.8]
+date = '2025052500'
+t='08'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.9]
+date = '2025052500'
+t='09'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.10]
+date = '2025052500'
+t='10'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.11]
+date = '2025052500'
+t='11'
+fieldDef=['1']
+plotDomains=[0]
+
+[opts.Case.12]
+date = '2025052500'
+t='12'
+fieldDef=['1']
+plotDomains=[0]
+
+#########################################################
+
+[opts.Fields.0]
+
+levels = [0]
+pars = ['SURFACCPLUIE','SURFNEBUL.TOTALE','CLSTEMPERATURE']
+
+[opts.Fields.1]
+
+levels = [0]
+pars = ['SPP_PATTERN1','SPP_PATTERN3']
+#pars = ['SPP_PATTERN','SURFNEBUL.TOTALE','SURFACCPLUIE']
+
+#########################################################
+
+[opts.Type.0]
+
+plottype="multiMember"
+expName="mflds"
+
+scalesMatched=true
+
+manualBounds=[[-3.0,0.0,3.0],[-3.0,0.0,3.0]]
+    
+masked=true
+
+spgPattern=true
+
+#########################################################
+
+[opts.Add]
+
+figName=[]
+
+includeRef=true
+
+monoColor=false
+
+hardMaskId=""
+    
+fixNegData=false 
+
+areaMask=false
+
+addName="" 
+
+parallel=false
+poolSize=4

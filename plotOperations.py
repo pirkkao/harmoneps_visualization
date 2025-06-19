@@ -13,8 +13,38 @@ import matplotlib.colors as colors
 ##########################################################
 # Functions
 #
+def setupFig(plottype,members,pars,exp):
+    
+    if plottype=="multiMember" or plottype=="multiMemberDiff":
+        nrows=len(members)
+        ncols=len(pars)
+        figsize=(5*ncols,5*nrows)
 
-def create_fig(rows,cols,figsize,proj):
+    elif plottype=="multiMemberStd":
+        nrows=3
+        ncols=len(pars)
+        figsize=(5*ncols,5*nrows)
+
+    elif plottype=="multiExpDiff" or plottype=="multiExpStd":
+        nrows=len(exp)+1
+        ncols=len(pars)
+        figsize=(5*ncols,5*nrows)
+    
+    else:
+        nrows=7
+        ncols=len(pars)
+        figsize=(5*ncols,5*nrows)
+
+    # Try to autoscale everything based on data
+    #
+    plt.rc('font',size=0) #+(nrows*ncols)/4)
+    plt.rc('axes',titlesize=8) #+(nrows*ncols)/4)
+    plt.rc('ytick',labelsize=6) #+(nrows*ncols)/4)
+
+    return nrows,ncols,figsize
+
+########################################################
+def createFig(rows,cols,figsize,proj):
     # Create matplotlib subplot handle
     #
     fig,ax=plt.subplots(nrows=rows,ncols=cols,figsize=figsize,\
@@ -25,22 +55,49 @@ def create_fig(rows,cols,figsize,proj):
     return fig,ax
 
 ########################################################
-def init_fig2(data,nrows,ncols,figsize):
+def initFig(data,nrows,ncols,figsize):
     # Init figure handles
 
-    fig,ax=create_fig(nrows,ncols,figsize,data.geometry.default_cartopy_CRS())
+    fig,ax=createFig(nrows,ncols,figsize,data.geometry.default_cartopy_CRS())
 
     return fig,ax
 
+
 ########################################################
-def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtra=[],\
-                       subZone=0,manualBounds=[]):
+def saveFig(fig,figName,expName,date,t,level,exp,izone):
+    # Save figure
+
+    # Create figure name if not given
+    if not figName:
+        figName=expName+"_"+date+"_+"+t+"h"+"_lev"+str(level)+"_"\
+            +exp[0]+"_domain"+str(izone)+".png"
+
+    # Full domain save
+    if izone==0:
+        fig.savefig("fig/"+figName,\
+                    pad_inches=0.5,bbox_inches='tight')
+        
+    # Sub-domain save, padding messed up due to "cropping"
+    else:
+        fig.savefig("fig/"+figName)
+
+    plt.close(fig)
+
+########################################################
+def plotMain(fig,ax,data,plottype,masked,scalesMatched,monoColor,\
+             dExtra=[],subZone=0,manualBounds=[],spgPattern=False,\
+             t='N',level='NaN',date='NaN',exp='NaN',printLog=True):
     # Plot option for plotting multiple members for a chosen
     # variable/level array.
     #
     # Plotting from AllData
     #
     
+    # LOG
+    if printLog:
+        print("Plotting   fc+",t, "on level" ,str(level),"izone",subZone,\
+              "    ",date,exp)
+
     # Unroll over the dimensions indicated by dim
     for i in range(0,data.shape[0]):
         for j in range(0,data.shape[1]):
@@ -55,17 +112,24 @@ def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtr
                     #             inum=j)
                     
                 else:
+                    colmap='plasma'
                     if not scalesMatched:
                         dataBounds=[]
                     else:
                         dataBounds=[dExtra[j]]
-                        if manualBounds:
+
+                        if spgPattern:
+                            dataBounds=manualBounds[j]
+                            colmap='RdBu_r'
+                            
+                        elif manualBounds:
                             dataBounds=[manualBounds[0][j]]
                                         
                     #plot_in_fig(fig,ax[i,j],data[i,j],scalesMatched=True,dataBounds=[0,dExtra[j]])
                     #plot_in_fig(fig,ax[i],data[i,j],scalesMatched=True,dataBounds=manualBounds)
-                    plot_in_fig(fig,ax[i,j],data[i,j],scalesMatched=scalesMatched,masked=masked,\
-                                dataBounds=dataBounds,subZone=subZone)
+                    plot_in_fig(fig,ax[i,j],data[i,j],colmap=colmap,scalesMatched=scalesMatched,\
+                                masked=masked,\
+                                dataBounds=dataBounds,subZone=subZone,spgPattern=spgPattern)
                         
                 #else:
                 #    plot_in_fig(fig,ax[i,j],data[i,j])
@@ -122,6 +186,8 @@ def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtr
                     else:
                         dataBounds=[]
 
+                    print(dataBounds)
+                        
                     plot_in_fig(fig,ax[i,j],data[i,j],colmap="Reds",center=True,\
                                 masked=masked,dataBounds=dataBounds)
             
@@ -153,18 +219,23 @@ def plot_multi_member3(fig,ax,data,plottype,masked,scalesMatched,monoColor,dExtr
                     else:
                         dataBounds=[dExtra[0][j]]
                         
-                    plot_in_fig(fig,ax[i,j],data[i,j],colmap="Reds_r",\
+                    plot_in_fig(fig,ax[i,j],data[i,j],colmap="Reds",\
                                 masked=masked,dataBounds=dataBounds,subZone=subZone)
 
+    # LOG
+    if printLog:
+        print("Plotting   fc+",t, "on level",str(level),"izone",subZone,\
+              "DONE",date,exp)
     
 ########################################################
-def plot_in_fig(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,masked=False,dataBounds=[],subZone=0):
+def plot_in_fig(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,masked=False,\
+                dataBounds=[],subZone=0,spgPattern=False):
     # Use epygram cartopy function to plot the data
     #
     title="{0}\n Min{1} Max {2}\n Mean {3}".\
         format(data.fid['FA'],format(data.min(),'.3e'),\
         format(data.max(),'.3e'),format(data.mean(),'.3e'))
-
+    
     if len(dataBounds)==0:
         data.cartoplot(fig=fig,ax=ax,colormap=colmap,center_cmap_on_0=center,title=title)
 
@@ -208,20 +279,39 @@ def plot_in_fig(fig,ax,data,colmap='plasma',center=False,scalesMatched=False,mas
 
                 extend='max'
             else:
-                absMin=min(dataBounds[0],-1*dataBounds[1])
-                colorbounds=np.linspace(-1*absMin,absMin,10)
+                if spgPattern:
+                    
+                    #norm=colors.DivergingNorm(vmin=dataBounds[0],vcenter=dataBounds[1],vmax=dataBounds[2])
+                    norm=colors.TwoSlopeNorm(vmin=dataBounds[0],vcenter=dataBounds[1],vmax=dataBounds[2])
+                    colorbounds=np.linspace(dataBounds[0],dataBounds[2],15)
+                    if dataBounds[0] < 0.0:
+                        extend='both'
+                    else:
+                        extend='max'
+                        
+                else:
+                    absMin=min(dataBounds[0],-1*dataBounds[1])
+                    colorbounds=np.linspace(-1*absMin,absMin,10)
 
-                # Offscale the innermost two values
-                colorbounds[4]=colorbounds[4]*0.4
-                colorbounds[5]=colorbounds[5]*0.4
+                    # Offscale the innermost two values
+                    colorbounds[4]=colorbounds[4]*0.4
+                    colorbounds[5]=colorbounds[5]*0.4
                 
-                extend='both'
+                    extend='both'
 
-            data.cartoplot(fig=fig,ax=ax,center_cmap_on_0=center,\
-                           plot_method='contourf',\
-                           contourf_kw={'extend':extend,'cmap':colmap},\
-                           colorbounds=colorbounds,
-                           title=title)
+            # Run spgPattern with additional norm arg
+            if spgPattern:
+                data.cartoplot(fig=fig,ax=ax,center_cmap_on_0=center,\
+                               plot_method='contourf',\
+                               contourf_kw={'extend':extend,'cmap':colmap, 'norm':norm},\
+                               colorbounds=colorbounds,
+                               title=title)
+            else:
+                data.cartoplot(fig=fig,ax=ax,center_cmap_on_0=center,\
+                               plot_method='contourf',\
+                               contourf_kw={'extend':extend,'cmap':colmap},\
+                               colorbounds=colorbounds,
+                               title=title)
 
     if subZone==1:
         ax.set_extent([14, 27, 54, 63])

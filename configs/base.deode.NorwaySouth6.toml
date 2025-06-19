@@ -1,0 +1,71 @@
+#########################################################
+[run.Main]
+parallel=true
+parallelProcesses=2
+
+#########################################################
+
+[opts.Main]
+dpath="/ec/res4/scratch/fi3/investigation/deode_spp"
+exp= ["CY49t2_NorwaySouth_SPP6","CY49t2_NorwaySouth_SPP7"]
+
+members = [0,1,2,3,4,5,6]
+#members = [0,1,2,3]
+
+#########################################################
+# Case 0:
+#
+[opts.Case.0]
+date = '2025052500'
+t='06'
+fieldDef=['0']
+plotDomains=[0]
+
+[opts.Case.1]
+date = '2025052500'
+t='12'
+fieldDef=['0']
+plotDomains=[0]
+
+
+#########################################################
+
+[opts.Fields.0]
+
+levels = [0]
+pars = ['SURFACCPLUIE','SURFNEBUL.TOTALE','CLSTEMPERATURE']
+
+
+#########################################################
+
+[opts.Type.0]
+
+plottype="multiExpStd"
+expName="estdv"
+
+scalesMatched=false
+
+manualBounds="" #getFromTable"
+    
+masked=true
+
+#########################################################
+
+[opts.Add]
+
+figName=[]
+
+includeRef=true
+
+monoColor=false
+
+hardMaskId=""
+    
+fixNegData=false 
+
+areaMask=false
+
+addName="" 
+
+parallel=false
+poolSize=4

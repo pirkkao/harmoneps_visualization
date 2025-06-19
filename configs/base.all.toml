@@ -1,0 +1,188 @@
+#########################################################
+[run.Main]
+parallel=false
+parallelProcesses=7
+
+#########################################################
+
+[opts.Main]
+dpath="/ec/res4/scratch/fi3/investigation/icenu"
+exp= ["spp_sp_oper","spp_sp_oper_icenu"]
+
+members = [0,1,2,3,4,5,6]
+#members = [0,1,2,3]
+
+#########################################################
+# Case 0:
+#
+[opts.Case.2022071512]
+date = '2022071512'
+
+[opts.Case.2022071512.06]
+t='06'
+fieldDef=['0']
+plotDomains=[0,1]
+
+#[opts.Case.2022071512.12]
+#t='12'
+#fieldDef=['0']
+#plotDomains=[0]
+
+#[opts.Case.2022071512.24]
+#t='24'
+#fieldDef=['0']
+#plotDomains=[0]
+
+
+#########################################################
+# Case 1:
+#
+[opts.Case.2022071712]
+date = '2022071712'
+
+[opts.Case.2022071712.06]
+t='06'
+fieldDef=['0']
+plotDomains=[0]
+
+#[opts.Case.2022071712.12]
+#t='12'
+#fieldDef=['0']
+#plotDomains=[0]
+
+#[opts.Case.2022071712.24]
+#t='24'
+#fieldDef=['0']
+#plotDomains=[0]
+
+#########################################################
+# Case 2:
+#
+[opts.Case.2023021812]
+date = '2023021812'
+
+[opts.Case.2023021812.06]
+t= '06'
+plotDomains=[5]
+fieldDef=['1']
+
+#########################################################
+# Case 3:
+#
+[opts.Case.2023021712]
+date = '2023021712'
+
+[opts.Case.2023021712.30]
+t= '30'
+plotDomains=[5]
+fieldDef=['1']
+
+#########################################################
+# Case 4:
+#
+[opts.Case.2023022012]
+date = '2023022012'
+
+[opts.Case.2023022012.03]
+t= '03'
+plotDomains=[5]
+fieldDef=['1']
+
+#########################################################
+# Case 5:
+#
+[opts.Case.2023021912]
+date = '2023021912'
+
+[opts.Case.2023021912.27]
+t= '27'
+plotDomains=[5]
+fieldDef=['1']
+
+#########################################################
+
+[opts.Fields.0]
+
+levels = [0]
+pars = ['SURFACCPLUIE','SURFNEBUL.TOTALE','CLSTEMPERATURE']
+
+#########################################################
+
+[opts.Fields.1]
+
+levels = [0]
+pars = ['SURFACCPLUIE','SURFACCNEIGE','SURFACCGRAUPEL']
+
+#########################################################
+
+[opts.Type.0]
+
+plottype="multiMember"
+expName="mflds"
+
+scalesMatched=true
+
+manualBounds="getFromTable"
+    
+masked=false
+
+#########################################################
+
+[opts.Type.1]
+
+plottype="multiMemberDiff"
+expName="mdiff"
+
+scalesMatched=true
+
+manualBounds="getFromTable"
+    
+masked=true
+
+#########################################################
+
+[opts.Type.2]
+
+plottype="multiExpDiff"
+expName="ediff"
+
+scalesMatched=false
+
+manualBounds="" #"getFromTable"
+    
+masked=true
+
+#########################################################
+
+[opts.Type.3]
+
+plottype="multiExpStd"
+expName="estdv"
+
+scalesMatched=false
+
+manualBounds="" #"getFromTable"
+    
+masked=true
+
+##########################################################
+
+[opts.Add]
+
+figName=[]
+
+includeRef=true
+
+monoColor=false
+
+hardMaskId=""
+    
+fixNegData=false 
+
+areaMask=false
+
+addName="" 
+
+parallel=false
+poolSize=4
+

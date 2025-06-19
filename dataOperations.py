@@ -3,6 +3,10 @@ import epygram
 import numpy as np
 import copy
 
+from os import system, path
+
+import toml
+
 #import warnings
 #warnings.filterwarnings("ignore",category=np.VisibleDeprecationWarning)
 
@@ -11,6 +15,232 @@ import copy
 ########################################################
 # Functions
 #
+def init(ccase,tomlCase):
+    # Initialize setup
+
+    if ccase:
+        # Copy config file for specified case
+        #
+        ccase="configs/case."+ccase+".py"
+
+        if not path.exists(ccase):
+            print("Config file not found, aborting...")
+            exit()
+        else:
+            print("Using configs from: "+ccase)
+        
+        system("cp "+ccase+" mycase.py")
+        cnf=None
+
+    else:
+        # Read in toml config
+        #
+        with open('configs/base.'+tomlCase+'.toml',mode='r') as fp:
+            cnf = toml.load(fp)
+
+    return cnf
+
+########################################################
+def constructCasesNew(cnf):
+    # Link toml fields to local variables
+    #
+    # !NOTE!
+    # Later link these directly to mainOper()
+
+    listCases=[]
+            
+    for iCase in cnf['opts']['Case'].items():
+
+        date=iCase[1]['date']
+        time=iCase[1]['t']
+        plotDomains=iCase[1]['plotDomains']
+
+        for iField in iCase[1]['fieldDef']:
+            ifld=cnf['opts']['Fields'][iField]
+
+            print(ifld)
+                
+            for itype in cnf['opts']['Type']:
+            
+                listCases.append({
+                    'Date': date,
+                    'Time': time,
+                    'Case': iCase[0],
+                    'Type': itype,
+                    'Flds': iField,
+                    'plotDomains': plotDomains})
+
+    return listCases
+
+########################################################
+def tomlToFuncNew(iSelection,cnf):
+    # Link toml fields to local variables
+    #
+    # !NOTE!
+    # Later link these directly to mainOper()
+
+    # MAIN
+    cMain=cnf['opts']['Main']
+
+    dpath=cMain['dpath']
+    exp=cMain['exp']
+    members=cMain['members']
+
+    # CASE
+    cCase=iSelection['Case']
+    date=iSelection['Date']
+    t=[iSelection['Time'].zfill(2)]
+    plotDomains=iSelection['plotDomains']    
+    
+    # TYPE
+    cType=cnf['opts']['Type'][iSelection['Type']]
+
+    plottype=cType['plottype']
+    expName=cType['expName']
+    scalesMatched=cType['scalesMatched']
+    manualBounds=cType['manualBounds']
+    masked=cType['masked']
+    try:
+        spgPattern=cType['spgPattern']
+    except:
+        spgPattern=False
+
+    # FIELDS
+    if iSelection['Flds']:
+        cFlds=cnf['opts']['Fields'][iSelection['Flds']]
+    else:
+        iFlds=cCase['fieldDef'][0]
+        cFlds=cnf['opts']['Fields'][iFlds]
+
+    levels=cFlds['levels']
+    pars=cFlds['pars']    
+
+    # ADD
+    cAdd=cnf['opts']['Add']
+
+    figName=cAdd['figName']
+    fixNegData=cAdd['fixNegData']
+    hardMaskId=cAdd['hardMaskId']
+
+
+    return levels,dpath,exp,date,t,members,pars,plottype,scalesMatched,\
+        fixNegData,masked,hardMaskId,plotDomains,manualBounds,\
+        figName,expName,spgPattern
+
+########################################################
+def constructCases(cSelection,cnf):
+    # Link toml fields to local variables
+    #
+    # !NOTE!
+    # Later link these directly to mainOper()
+
+    listCases=[]
+
+    icounter=0
+    # Construct all cnf files requested
+    for icase in cSelection:
+        
+        #for iterItem in cnf['opts']['Case'][cSelection[icase]['Case']].items():
+        #    print(iterItem)
+        #    print("\n")
+            
+        for iterItem in cnf['opts']['Case'][cSelection[icase]['Case']].items():
+
+            if iterItem[0]=='date':
+                date=iterItem[1]
+                continue
+
+            else:
+
+                time=iterItem[1]['t']
+                fieldDef=iterItem[1]['fieldDef']
+                plotDomains=iterItem[1]['plotDomains']
+                
+                #listCases.update({icounter:{
+                #    'Time': iterItem[1]['t'],
+                #    'fieldDef': iterItem[1]['fieldDef'],
+                #    'plotDomains': iterItem[1]['plotDomains']}})
+
+
+                #icounter+=1
+
+            for itype in cSelection[icase]['Type']:
+                try:
+                    flds=cSelection[icase]['Flds']
+                except:
+                    flds=fieldDef
+                    
+                for ifld in flds:
+                    #listCases[icounter]={
+                    listCases.append({
+                        'Date': date,
+                        'Time': time,
+                        'Case': cSelection[icase]['Case'],
+                        'Type': itype,
+                        'Flds': ifld,
+                        'plotDomains': plotDomains})
+                    icounter+=1
+                
+
+
+    return listCases
+
+########################################################
+def tomlToFunc(iSelection,cnf):
+    # Link toml fields to local variables
+    #
+    # !NOTE!
+    # Later link these directly to mainOper()
+
+    # MAIN
+    cMain=cnf['opts']['Main']
+
+    dpath=cMain['dpath']
+    exp=cMain['exp']
+    members=cMain['members']
+
+    # CASE
+    cCase=cnf['opts']['Case'][iSelection['Case']]
+    
+    date=cCase['date']
+    tCase=cCase[iSelection['Time']]
+    t=[iSelection['Time'].zfill(2)]
+    plotDomains=tCase['plotDomains']
+    
+    # TYPE
+    cType=cnf['opts']['Type'][iSelection['Type']]
+
+    plottype=cType['plottype']
+    expName=cType['expName']
+    scalesMatched=cType['scalesMatched']
+    manualBounds=cType['manualBounds']
+    masked=cType['masked']
+
+
+    # FIELDS
+    if iSelection['Flds']:
+        cFlds=cnf['opts']['Fields'][iSelection['Flds']]
+    else:
+        iFlds=cCase['fieldDef'][0]
+        cFlds=cnf['opts']['Fields'][iFlds]
+
+    levels=cFlds['levels']
+    pars=cFlds['pars']    
+
+    # ADD
+    cAdd=cnf['opts']['Add']
+
+    figName=cAdd['figName']
+    fixNegData=cAdd['fixNegData']
+    hardMaskId=cAdd['hardMaskId']
+
+
+    return levels,dpath,exp,date,t,members,pars,plottype,scalesMatched,\
+        fixNegData,masked,hardMaskId,plotDomains,manualBounds,\
+        figName,expName
+
+
+########################################################
 def file_name(path,exp,date,time,memb):
     # Construct the file path
     #
@@ -22,9 +252,10 @@ def file_name(path,exp,date,time,memb):
 def load_data(fname,level,par):
     # Load data with epygram and read the desired field in
     #
-    if level > 0:
+    if level > 9:
         parname="S0"+str(level)+par
-
+    elif level > 0:
+        parname="S00"+str(level)+par
     else:
         parname=par
         # Overwrite for SPP pattern (stored differently),
@@ -33,6 +264,18 @@ def load_data(fname,level,par):
             parname="S001SPP_PATTERN"
         elif par=="SPP_PATTERN2":
             parname="S002SPP_PATTERN"
+        elif par=="SPP_PATTERN3":
+            parname="S003SPP_PATTERN"
+        elif par=="SPP_PATTERN4":
+            parname="S004SPP_PATTERN"
+        elif par=="SPP_PATTERN5":
+            parname="S005SPP_PATTERN"
+        elif par=="SPP_PATTERN6":
+            parname="S006SPP_PATTERN"
+        elif par=="SPP_PATTERN7":
+            parname="S007SPP_PATTERN"
+        elif par=="SPP_PATTERN8":
+            parname="S008SPP_PATTERN"
         elif par=='SURFINSPLUIE' or par=='SURFINSNEIGE' or par=='SURFINSGRAUPEL':
             parname=par
         elif par=='SURFNEBUL.TOTALE':
@@ -58,7 +301,13 @@ def loadAllData(path,exp,date,t,members,level,pars,fixNegData,hardMaskId):
         for memb in members:
             # Construct filename for exp and member
             if memb==0:
-                fname=file_name(path,"control",date,t,str(memb))
+                try:
+                    path.isname(file_name(path,"control",date,t,str(memb)))
+                except:
+                    fname=file_name(path,expi,date,t,str(memb))
+                else:
+                    fname=file_name(path,"control",date,t,str(memb))
+
             else:
                 fname=file_name(path,expi,date,t,str(memb))
 
@@ -105,13 +354,21 @@ def loadAllData(path,exp,date,t,members,level,pars,fixNegData,hardMaskId):
     return data
 
 ########################################################
-def main_data(path,exp,date,t,members,level,pars,plottype,scalesMatched,fixNegData,areaMask):
+def mainData(path,exp,date,t,members,level,pars,plottype,scalesMatched,\
+             fixNegData,areaMask,printLog):
+
+
+    # LOG
+    if printLog:
+        print("Processing fc+",t,"on level",str(level),"       ",\
+              "    ",date,exp)
     
     # Load in all data
     data=loadAllData(path,exp,date,t,members,level,pars,fixNegData,areaMask)
 
     # Clean out not used dimensions frm the data matrix
-    if plottype!="multiExpDiff" and plottype!="multiExpStd" and plottype!="multiExpDiffStd":
+    if plottype!="multiExpDiff" and plottype!="multiExpStd" and \
+       plottype!="multiExpDiffStd":
         data=reduceData(data,dim=(1,2))
 
     dextra=[]
@@ -155,6 +412,11 @@ def main_data(path,exp,date,t,members,level,pars,plottype,scalesMatched,fixNegDa
         if scalesMatched:
             dextra=getStats(data)[1:3]
 
+    # LOG
+    if printLog:
+        print("Processing fc+",t,"on level",str(level),"       ",\
+              "DONE",date,exp)
+            
     return data,dextra
 
 ########################################################
@@ -406,7 +668,7 @@ def dhDiff2(data,masked):
     return data
 
 
-def setPredefinedBounds(date,t,pars):
+def setPredefinedBounds(date,t,pars,plottype):
     # Predefined list for output field bounds
     #
     # [value for raw field upper limit, value for field diff]
@@ -423,9 +685,13 @@ def setPredefinedBounds(date,t,pars):
         if par=='SURFACCPLUIE':
             base=[10.,1] # kg/m3
 
-            table=dict([('2022071512'+'06',[20,4]),
-                        ('2022071512'+'12',[30,6]),
-                        ('2022071512'+'24',[40,8])])
+            table=dict([('2022071512'+'06',[20,5]),
+                        ('2022071512'+'12',[32,8]),
+                        ('2022071512'+'24',[40,10]),
+                        ('2022071712'+'06',[20,5]),
+                        ('2022071712'+'12',[32,8]),
+                        ('2022071712'+'24',[40,10])
+            ])
             
         elif par=='SURFNEBUL.TOTALE':
 
@@ -437,7 +703,11 @@ def setPredefinedBounds(date,t,pars):
 
             table=dict([('2022071512'+'06',[[278,303],2]),
                         ('2022071512'+'12',[[278,303],4]),
-                        ('2022071512'+'24',[[278,303],8])])
+                        ('2022071512'+'24',[[278,303],6]),
+                        ('2022071712'+'06',[[278,303],2]),
+                        ('2022071712'+'12',[[278,303],4]),
+                        ('2022071712'+'24',[[278,303],6])
+            ])
 
         # Overwrite base if table value is found for date+t
         if table:
@@ -456,7 +726,11 @@ def setPredefinedBounds(date,t,pars):
         control.append(item[0])
         diff.append(item[1])
 
-    manualBounds=[control,diff]
+    if plottype=='multiMemberDiff':
+        manualBounds=[control,diff]
+
+    elif plottype=='multiMember':
+        manualBounds=[control]
     
     return manualBounds
 
